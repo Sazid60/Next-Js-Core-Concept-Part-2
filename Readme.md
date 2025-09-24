@@ -81,3 +81,92 @@ const AllBlogsPage = async () => {
 export default AllBlogsPage;
 
 ```
+
+## 53-4 Retrieve dynamic data with an ID for the detail page using SSR
+```tsx 
+import BlogDetailsCard from "@/components/modules/Blogs/BlogDetailsCard";
+
+const BlogDetailsPage = async ({ params }: { params: Promise<{ blogId: string }> }) => {
+    const { blogId } = await params;
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/post/${blogId})
+
+    const blog  = await res.json()
+    return (
+        <div className="py-30 px-4 max-w-7xl mx-auto">
+            <h1>Blog Details Page</h1>
+            <BlogDetailsCard blog={blog} />
+        </div>
+    );
+};
+
+export default BlogDetailsPage;
+```
+- by default a component is doing server site rendering. so loading state will appear here even if its not mentioned 
+- This is because of reducing load on server.
+- Instead of doing this we can do something like top most visited 10/20 posts contents will be generated statically in build time instead of on-demand request this will smoothen the user experience. we will use `generateStaticParams()`. 
+
+
+## 53-5 Fetch dynamic data using generateStaticParams() for SSG
+- The generateStaticParams function can be used in combination with dynamic route segments to statically generate routes at build time instead of on-demand at request time.
+
+```tsx 
+import BlogDetailsCard from "@/components/modules/Blogs/BlogDetailsCard";
+
+export const generateStaticParams = async () => {
+    return [
+        {
+            blogId: "1"
+        }
+    ]
+}
+
+const BlogDetailsPage = async ({ params }: { params: Promise<{ blogId: string }> }) => {
+    const { blogId } = await params;
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/post/${blogId}`)
+
+    const blog = await res.json()
+    return (
+        <div className="py-30 px-4 max-w-7xl mx-auto">
+            <h1>Blog Details Page</h1>
+            <BlogDetailsCard blog={blog} />
+        </div>
+    );
+};
+
+export default BlogDetailsPage;
+```
+
+![alt text](image.png)
+
+- now grab the most visited post id dynamically. 
+
+```tsx 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import BlogDetailsCard from "@/components/modules/Blogs/BlogDetailsCard";
+
+export const generateStaticParams = async () => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/post`)
+
+    const { data: blogs } = await res.json()
+
+    return blogs.slice(0,2).map((blog: any) => ({
+        blogId: String(blog.id)
+    }))
+}
+
+const BlogDetailsPage = async ({ params }: { params: Promise<{ blogId: string }> }) => {
+    const { blogId } = await params;
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/post/${blogId}`)
+
+    const blog = await res.json()
+    return (
+        <div className="py-30 px-4 max-w-7xl mx-auto">
+            <h1>Blog Details Page</h1>
+            <BlogDetailsCard blog={blog} />
+        </div>
+    );
+};
+
+export default BlogDetailsPage;
+```
+- 
