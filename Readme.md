@@ -169,4 +169,83 @@ const BlogDetailsPage = async ({ params }: { params: Promise<{ blogId: string }>
 
 export default BlogDetailsPage;
 ```
-- 
+
+## 53-6 Generating Dynamic Metadata with generateMetadata()
+
+```tsx 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import BlogCard from "@/components/modules/Blogs/BlogCard";
+import { Metadata } from "next";
+
+export const metadata : Metadata = {
+  title: "All Blogs | Next Blog",
+  description : "This is a page which is seo Friendly"
+}
+const AllBlogsPage = async () => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/post`, {
+    cache : "no-store"
+  })
+  const { data: blogs } = await res.json()
+  return (
+    <div className="py-30 px-4 max-w-7xl mx-auto">
+      <h2 className="text-center text-4xl">All Blogs</h2>
+      <div className=" grid grid-cols-3 gap-4 max-w-6xl mx-auto my-6">
+        {blogs.map((blog: any) => (
+          <BlogCard key={blog.id} post={blog} />
+        ))}
+
+      </div>
+    </div>
+  );
+};
+
+export default AllBlogsPage;
+
+```
+- This is a basic seo works. we can add keyword, og image. 
+
+- Now lets see how we can add dynamic page dynamic meta data. we have to use it `generateMetadata`
+
+```tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import BlogDetailsCard from "@/components/modules/Blogs/BlogDetailsCard";
+
+export const generateStaticParams = async () => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/post`)
+
+    const { data: blogs } = await res.json()
+
+    return blogs.slice(0, 2).map((blog: any) => ({
+        blogId: String(blog.id)
+    }))
+}
+
+export const generateMetadata = async ({ params }
+    : { params: Promise<{ blogId: string }> }
+) => {
+    const { blogId } = await params;
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/post/${blogId}`)
+    const blog = await res.json()
+
+    return {
+        title : blog?.title,
+        description :blog?.content
+    }
+}
+
+const BlogDetailsPage = async ({ params }: { params: Promise<{ blogId: string }> }) => {
+    const { blogId } = await params;
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/post/${blogId}`)
+
+    const blog = await res.json()
+    return (
+        <div className="py-30 px-4 max-w-7xl mx-auto">
+            <h1>Blog Details Page</h1>
+            <BlogDetailsCard blog={blog} />
+        </div>
+    );
+};
+
+export default BlogDetailsPage;
+```
+

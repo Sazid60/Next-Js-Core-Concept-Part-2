@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import BlogCard from "@/components/modules/Blogs/BlogCard";
+import { Metadata } from "next";
 
+export const metadata : Metadata = {
+  title: "All Blogs | Next Blog",
+  description : "This is a page which is seo Friendly"
+}
 const AllBlogsPage = async () => {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/post`, {
     cache : "no-store"
