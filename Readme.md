@@ -249,3 +249,265 @@ const BlogDetailsPage = async ({ params }: { params: Promise<{ blogId: string }>
 export default BlogDetailsPage;
 ```
 
+## 53-7 Creating Blogs Using Next.js Form Component
+- React Server Actions are Server Functions that execute on the server. They can be called in Server and Client Components to handle form submissions. This guide will walk you through how to create forms in Next.js with Server Actions.
+- basic form 
+
+```tsx 
+"use client";
+
+
+import { useState } from "react";
+
+export default function CreateBlogForm() {
+  const [isFeatured, setIsFeatured] = useState("false");
+
+  return (
+    <form
+      className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg space-y-4 w-full"
+    >
+      <h2 className="text-xl font-semibold mb-4">Create Blog</h2>
+
+      {/* Title */}
+      <div>
+        <label className="block text-sm font-medium mb-1" htmlFor="title">
+          Title
+        </label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          className="w-full rounded-md border px-3 py-2 focus:ring focus:ring-blue-200"
+        />
+      </div>
+
+      {/* Content */}
+      <div>
+        <label className="block text-sm font-medium mb-1" htmlFor="content">
+          Content
+        </label>
+        <textarea
+          id="content"
+          name="content"
+          rows={4}
+          className="w-full rounded-md border px-3 py-2 focus:ring focus:ring-blue-200"
+        />
+      </div>
+
+      {/* Thumbnail */}
+      <div>
+        <label className="block text-sm font-medium mb-1" htmlFor="thumbnail">
+          Thumbnail URL
+        </label>
+        <input
+          type="url"
+          id="thumbnail"
+          name="thumbnail"
+          className="w-full rounded-md border px-3 py-2 focus:ring focus:ring-blue-200"
+        />
+      </div>
+
+      {/* Tags */}
+      <div>
+        <label className="block text-sm font-medium mb-1" htmlFor="tags">
+          Tags (comma separated)
+        </label>
+        <input
+          type="text"
+          id="tags"
+          name="tags"
+          placeholder="Next.js, React, Web Development"
+          className="w-full rounded-md border px-3 py-2 focus:ring focus:ring-blue-200"
+        />
+      </div>
+
+      {/* Featured */}
+      <div>
+        <p className="block text-sm font-medium mb-1">Featured</p>
+        <div className="flex gap-6">
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="isFeatured"
+              value="true"
+              checked={isFeatured === "true"}
+              onChange={(e) => setIsFeatured(e.target.value)}
+              className="text-blue-600 focus:ring-blue-500"
+            />
+            Yes
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="isFeatured"
+              value="false"
+              checked={isFeatured === "false"}
+              onChange={(e) => setIsFeatured(e.target.value)}
+              className="text-blue-600 focus:ring-blue-500"
+            />
+            No
+          </label>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        className="w-full bg-blue-600 text-white font-medium py-2 rounded-md hover:bg-blue-700 transition"
+      >
+        Submit
+      </button>
+    </form>
+  );
+}
+```
+- we will use next.js form component that will prevent the on click reload and we can pass a action/function inside. 
+- lets make the function 
+- for converting a regular function to server action function we have to use `use server`
+```ts 
+"use server" // for converting a regular function to server action function 
+export const create = async(data: FormData) =>{
+
+}
+```
+- if we think of directly using the function inside the component we have say `use server`
+
+```tsx 
+import CreateBlogForm from "@/components/modules/Blogs/CreateBlogForm";
+import React from "react";
+
+const CreateBlog = () => {
+  "use server"
+  const create = async (data :FormData) =>{
+    console.log(data)
+  }
+  return (
+    <div className="w-full flex justify-between items-center">
+      <CreateBlogForm/>
+    </div>
+  );
+};
+
+export default CreateBlog;
+
+```
+- but we will do it in separate component 
+```tsx 
+"use client";
+
+import { create } from "@/actions/create";
+import Form from "next/form";
+
+import { useState } from "react";
+
+export default function CreateBlogForm() {
+  const [isFeatured, setIsFeatured] = useState("false");
+
+  return (
+    <Form
+      action={create}
+      className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg space-y-4 w-full"
+    >
+      <h2 className="text-xl font-semibold mb-4">Create Blog</h2>
+
+      {/* Title */}
+      <div>
+        <label className="block text-sm font-medium mb-1" htmlFor="title">
+          Title
+        </label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          className="w-full rounded-md border px-3 py-2 focus:ring focus:ring-blue-200"
+        />
+      </div>
+
+      {/* Content */}
+      <div>
+        <label className="block text-sm font-medium mb-1" htmlFor="content">
+          Content
+        </label>
+        <textarea
+          id="content"
+          name="content"
+          rows={4}
+          className="w-full rounded-md border px-3 py-2 focus:ring focus:ring-blue-200"
+        />
+      </div>
+
+      {/* Thumbnail */}
+      <div>
+        <label className="block text-sm font-medium mb-1" htmlFor="thumbnail">
+          Thumbnail URL
+        </label>
+        <input
+          type="url"
+          id="thumbnail"
+          name="thumbnail"
+          className="w-full rounded-md border px-3 py-2 focus:ring focus:ring-blue-200"
+        />
+      </div>
+
+      {/* Tags */}
+      <div>
+        <label className="block text-sm font-medium mb-1" htmlFor="tags">
+          Tags (comma separated)
+        </label>
+        <input
+          type="text"
+          id="tags"
+          name="tags"
+          placeholder="Next.js, React, Web Development"
+          className="w-full rounded-md border px-3 py-2 focus:ring focus:ring-blue-200"
+        />
+      </div>
+
+      {/* Featured */}
+      <div>
+        <p className="block text-sm font-medium mb-1">Featured</p>
+        <div className="flex gap-6">
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="isFeatured"
+              value="true"
+              checked={isFeatured === "true"}
+              onChange={(e) => setIsFeatured(e.target.value)}
+              className="text-blue-600 focus:ring-blue-500"
+            />
+            Yes
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="isFeatured"
+              value="false"
+              checked={isFeatured === "false"}
+              onChange={(e) => setIsFeatured(e.target.value)}
+              className="text-blue-600 focus:ring-blue-500"
+            />
+            No
+          </label>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        className="w-full bg-blue-600 text-white font-medium py-2 rounded-md hover:bg-blue-700 transition"
+      >
+        Submit
+      </button>
+    </Form>
+  );
+}
+```
+
+- create function 
+
+```tsx 
+"use server" // for converting a regular function to server action function 
+export const create = async (data: FormData) => {
+    console.log(data) // in react form data is not consolable but in next.js its consolable
+}
+```
+- this will not set the query parameter and stops page reloading 
