@@ -511,3 +511,112 @@ export const create = async (data: FormData) => {
 }
 ```
 - this will not set the query parameter and stops page reloading 
+
+## 53-8 Creating Blogs Using Next.js Server Actions
+- we are creating form data but we need to send plain object to backend so we have to convert the form data to plain object. 
+
+```tsx 
+"use server";
+
+import { redirect } from "next/navigation";
+
+export const create = async (data: FormData) => {
+  const blogInfo = Object.fromEntries(data.entries());
+  const modifiedData = {
+    ...blogInfo,
+    tags: blogInfo.tags
+      .toString()
+      .split(",")
+      .map((tag) => tag.trim()),
+    authorId: 1,
+    isFeatured: Boolean(blogInfo.isFeatured),
+  };
+
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/post`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(modifiedData),
+  });
+
+  const result = await res.json();
+
+  if (result?.id) {
+    redirect("/blogs"); // we can not use any hooks inside server component so its used. 
+  }
+  return result;
+};
+
+```
+
+## 53-9 Create Blog with Server Actions & Revalidate Homepage
+
+```tsx 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import BlogCard from "@/components/modules/Blogs/BlogCard";
+import Hero from "@/components/modules/Home/Hero";
+
+export default async function HomePage() {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/post`, {
+    next : {
+      tags : ["BLOGS"] //re validate 
+    }
+  })
+  const { data: blogs } = await res.json()
+
+  return (
+    <div>
+      <Hero />
+      <h2 className="text-center my-5 text-4xl">Featured Posts</h2>
+      <div className=" grid grid-cols-3 gap-4 max-w-6xl mx-auto">
+        {blogs.slice(0,3).map((blog: any) => (
+          <BlogCard key={blog.id} post={blog} />
+        ))}
+
+      </div>
+    </div>
+  );
+}
+
+```
+
+```tsx 
+"use server";
+
+import { revalidatePath, revalidateTag } from "next/cache";
+import { redirect } from "next/navigation";
+
+export const create = async (data: FormData) => {
+    const blogInfo = Object.fromEntries(data.entries());
+    const modifiedData = {
+        ...blogInfo,
+        tags: blogInfo.tags
+            .toString()
+            .split(",")
+            .map((tag) => tag.trim()),
+        authorId: 1,
+        isFeatured: Boolean(blogInfo.isFeatured),
+    };
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/post`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(modifiedData),
+    });
+
+    const result = await res.json();
+
+    if (result?.id) {
+        revalidateTag("BLOGS")
+        revalidatePath("/blogs") // which paths we want to revalidate 
+        redirect("/"); // we can not use any hooks inside server component so its used. 
+    }
+    return result;
+};
+
+```
+
+## 53-10 Exploring Route Handlers and Building RESTful APIs
